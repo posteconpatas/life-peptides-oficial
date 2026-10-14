@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/react"; // <-- Importamos Analytics
+import { Analytics } from "@vercel/analytics/react"; // <-- Importación del rastreador
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
+const serif = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-serif",
+  display: "swap",
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+
+const sans = Inter({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-sans",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Life Peptides Bolivia",
-  description: "Péptidos de grado científico y alta pureza para investigación en laboratorio.",
+  title: "Life Peptides — Investigación de Péptidos de Precisión",
+  description: "Catálogo oficial de Life Peptides. Ciencia, pureza y precisión.",
 };
 
 export default function RootLayout({
@@ -25,13 +28,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning
-      >
+    <html lang="es" suppressHydrationWarning className={`${serif.variable} ${sans.variable}`}>
+      <body suppressHydrationWarning>
         {children}
-        <Analytics /> {/* <-- Activamos el rastreador aquí */}
+        <Analytics /> {/* <-- Rastreador activado de fondo */}
       </body>
     </html>
   );
