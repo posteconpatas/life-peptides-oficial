@@ -21,6 +21,7 @@ type CartItem = Producto & { cantidad: number };
 const numeroWhatsApp = "59178272722";
 
 // Clasificador exacto según la tabla científica proporcionada
+// Clasificador exacto y flexible según la tabla científica proporcionada
 const detectarCategoria = (nombre: string): string => {
   const n = nombre.toUpperCase();
   
@@ -29,7 +30,7 @@ const detectarCategoria = (nombre: string): string => {
   if (n.includes("ADAMAX")) return "Neuroprotección";
   if (n.includes("AICAR")) return "Metabolismo energético";
   if (n.includes("AOD")) return "Metabolismo de grasas";
-  if (n.includes("ARA-290") || n.includes("ARA 290")) return "Antiinflamatorio y neuroprotección";
+  if (n.includes("ARA-290") || n.includes("ARA 290") || n.includes("ARA290")) return "Antiinflamatorio y neuroprotección";
   if (n.includes("BPC")) return "Reparación de tejidos";
   if (n.includes("CAGRILINTIDE")) return "Saciedad y control del apetito";
   if (n.includes("CEREBROLYSIN")) return "Neurología";
@@ -43,16 +44,16 @@ const detectarCategoria = (nombre: string): string => {
   if (n.includes("MELANOTAN")) return "Pigmentación de la piel";
   if (n.includes("MITO PRIME") || n.includes("MITOPRIME")) return "Metabolismo mitocondrial";
   if (n.includes("MOTS")) return "Metabolismo energético";
-  if (n.includes("PT-141") || n.includes("PT 141")) return "Función sexual";
+  if (n.includes("PT-141") || n.includes("PT 141") || n.includes("PT141")) return "Función sexual";
   if (n.includes("RETATRUTIDE")) return "Metabolismo, apetito y pérdida de peso";
   if (n.includes("SELANK")) return "Ansiedad y estrés (Investigación neurológica)";
   if (n.includes("SEMAX")) return "Neuroprotección y función cognitiva";
-  if (n.includes("SERMORELIN")) return "Estimulación de la liberación de GH";
+  if (n.includes("SERMORELIN") || n.includes("SERMORILIN")) return "Estimulación de la liberación de GH";
   if (n.includes("SLU-PP") || n.includes("SLU PP") || n.includes("SLU")) return "Metabolismo energético y resistencia física";
-  if (n.includes("SS-31") || n.includes("SS 31")) return "Función mitocondrial y protección celular";
+  if (n.includes("SS-31") || n.includes("SS 31") || n.includes("SS31")) return "Función mitocondrial y protección celular";
   if (n.includes("TB-500") || n.includes("TB 500") || n.includes("TB500")) return "Reparación de tejidos";
-  if (n.includes("TESAMORELIN")) return "Estimulación de GH y reducción de grasa visceral";
-  if (n.includes("THYMOSIN") || n.includes("ALPHA-1")) return "Modulación del sistema inmunitario";
+  if (n.includes("TESAMORELIN") || n.includes("TESAMORILIN")) return "Estimulación de GH y reducción de grasa visceral";
+  if (n.includes("THYMOSIN") || n.includes("ALPHA-1") || n.includes("ALPHA 1")) return "Modulación del sistema inmunitario";
   if (n.includes("TIRZEPATIDA") || n.includes("TIRZEPATIDE")) return "Control de glucosa, apetito y peso";
   
   if (n.includes("WATER") || n.includes("BAC")) return "Suministros y Diluyentes";
@@ -60,7 +61,7 @@ const detectarCategoria = (nombre: string): string => {
   if (n.includes("GHK") || n.includes("AHK") || n.includes("SNAP")) return "Péptidos Cosméticos";
   if (n.includes("CARDIOGEN") || n.includes("CARTALAX") || n.includes("CRYSTAGEN") || n.includes("PINEALON") || n.includes("PROSTAMAX") || n.includes("VESILUTE") || n.includes("EPITALON")) return "Biorreguladores";
   
-  return "Compuesto de Investigación"; // Categoría por defecto si no encaja en ninguna
+  return "Compuesto de Investigación"; // Categoría por defecto si subes algo que no está en la lista
 };
 
 const dict = {
