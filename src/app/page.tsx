@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 type Lang = "es" | "pt" | "en";
-type CatKey = "all" | "peptidos" | "cosmeticos" | "mezclas" | "biorreguladores" | "suministros";
 
 type Producto = {
   id: string;
@@ -12,7 +11,7 @@ type Producto = {
   dosis: string;
   precio: number;
   imagen: string;
-  categoria?: string;
+  categoria: string;
   descripcion: Record<Lang, string>;
   detalles: Record<Lang, string>;
 };
@@ -21,26 +20,47 @@ type CartItem = Producto & { cantidad: number };
 
 const numeroWhatsApp = "59178272722";
 
-const detectarCategoria = (nombre: string, catManual?: string): Exclude<CatKey, "all"> => {
-  if (catManual && ["peptidos", "cosmeticos", "mezclas", "biorreguladores", "suministros"].includes(catManual)) {
-    return catManual as Exclude<CatKey, "all">;
-  }
+// Clasificador exacto según la tabla científica proporcionada
+const detectarCategoria = (nombre: string): string => {
   const n = nombre.toUpperCase();
-  if (n.includes("WATER") || n.includes("BAC")) return "suministros";
-  if (n.includes("BLEND") || n.includes("+") || n.includes("GLOW") || n.includes("KLOW") || n.includes("WOLVERINE")) return "mezclas";
-  if (n.includes("GHK") || n.includes("AHK") || n.includes("SNAP")) return "cosmeticos";
-  if (
-    n.includes("CARDIOGEN") ||
-    n.includes("CARTALAX") ||
-    n.includes("CRYSTAGEN") ||
-    n.includes("PINEALON") ||
-    n.includes("PROSTAMAX") ||
-    n.includes("VESILUTE") ||
-    n.includes("EPITALON")
-  ) {
-    return "biorreguladores";
-  }
-  return "peptidos";
+  
+  if (n.includes("5-AMINO") || n.includes("5 AMINO")) return "Metabolismo y grasa corporal";
+  if (n.includes("ABALOPARATIDE")) return "Salud ósea";
+  if (n.includes("ADAMAX")) return "Neuroprotección";
+  if (n.includes("AICAR")) return "Metabolismo energético";
+  if (n.includes("AOD")) return "Metabolismo de grasas";
+  if (n.includes("ARA-290") || n.includes("ARA 290")) return "Antiinflamatorio y neuroprotección";
+  if (n.includes("BPC")) return "Reparación de tejidos";
+  if (n.includes("CAGRILINTIDE")) return "Saciedad y control del apetito";
+  if (n.includes("CEREBROLYSIN")) return "Neurología";
+  if (n.includes("DSIP")) return "Regulación del sueño";
+  if (n.includes("FOXO4")) return "Senescencia celular y longevidad";
+  if (n.includes("HGH") || n.includes("SOMATROPIN")) return "Hormona de crecimiento";
+  if (n.includes("HUMANIN")) return "Protección celular y mitocondrial";
+  if (n.includes("IGF")) return "Crecimiento celular y señalización anabólica";
+  if (n.includes("KISSPEPTIN")) return "Función reproductiva";
+  if (n.includes("KPV")) return "Antiinflamatorio experimental";
+  if (n.includes("MELANOTAN")) return "Pigmentación de la piel";
+  if (n.includes("MITO PRIME") || n.includes("MITOPRIME")) return "Metabolismo mitocondrial";
+  if (n.includes("MOTS")) return "Metabolismo energético";
+  if (n.includes("PT-141") || n.includes("PT 141")) return "Función sexual";
+  if (n.includes("RETATRUTIDE")) return "Metabolismo, apetito y pérdida de peso";
+  if (n.includes("SELANK")) return "Ansiedad y estrés (Investigación neurológica)";
+  if (n.includes("SEMAX")) return "Neuroprotección y función cognitiva";
+  if (n.includes("SERMORELIN")) return "Estimulación de la liberación de GH";
+  if (n.includes("SLU-PP") || n.includes("SLU PP") || n.includes("SLU")) return "Metabolismo energético y resistencia física";
+  if (n.includes("SS-31") || n.includes("SS 31")) return "Función mitocondrial y protección celular";
+  if (n.includes("TB-500") || n.includes("TB 500") || n.includes("TB500")) return "Reparación de tejidos";
+  if (n.includes("TESAMORELIN")) return "Estimulación de GH y reducción de grasa visceral";
+  if (n.includes("THYMOSIN") || n.includes("ALPHA-1")) return "Modulación del sistema inmunitario";
+  if (n.includes("TIRZEPATIDA") || n.includes("TIRZEPATIDE")) return "Control de glucosa, apetito y peso";
+  
+  if (n.includes("WATER") || n.includes("BAC")) return "Suministros y Diluyentes";
+  if (n.includes("BLEND") || n.includes("+") || n.includes("GLOW") || n.includes("KLOW") || n.includes("WOLVERINE") || n.includes("NAD")) return "Mezclas de Péptidos (Blends)";
+  if (n.includes("GHK") || n.includes("AHK") || n.includes("SNAP")) return "Péptidos Cosméticos";
+  if (n.includes("CARDIOGEN") || n.includes("CARTALAX") || n.includes("CRYSTAGEN") || n.includes("PINEALON") || n.includes("PROSTAMAX") || n.includes("VESILUTE") || n.includes("EPITALON")) return "Biorreguladores";
+  
+  return "Compuesto de Investigación"; // Categoría por defecto si no encaja en ninguna
 };
 
 const dict = {
@@ -65,39 +85,32 @@ const dict = {
     cat: {
       sub: "Colección",
       title: "Nuestros Péptidos",
-      resSub: "NUESTROS PRODUCTOS DE INVESTIGACIÓN",
       resDisclaimer: "Exclusivamente para investigación científica y desarrollo de laboratorio in vitro.",
-      search: "Buscar péptido...",
+      search: "Buscar compuesto por nombre...",
       sortAZ: "Ordenar: A-Z",
       sortAsc: "Precio: menor a mayor",
       sortDesc: "Precio: mayor a menor",
       add: "Añadir al Carrito",
       empty: "No se encontraron productos.",
       sidebarBtn: "Índice de Productos",
-      categories: {
-        all: "Todos los Productos",
-        cosmeticos: "Péptidos Cosméticos",
-        mezclas: "Mezclas de Péptidos (Blends)",
-        biorreguladores: "Biorreguladores",
-        peptidos: "Péptidos de Investigación",
-        suministros: "Suministros y Diluyentes"
-      },
       modal: {
         badge: "Grado de Investigación · Pureza ≥99% (HPLC)",
+        bonusBadge: "🎁 +1 AGUA BACTERIOSTÁTICA GRATIS INCLUIDA",
+        bonusDesc: "Para garantizar la mejor experiencia, cada vial de este producto incluye como cortesía exclusiva su respectiva Agua Bacteriostática (BAC) lista para su correcta reconstitución, sin ningún costo adicional.",
         purposeTitle: "Propósito de Investigación y Aplicaciones",
         specsTitle: "Especificaciones Técnicas y Composición",
         specForm: "Forma física",
         specFormVal: "Polvo liofilizado estéril / Solución bacteriostática",
         specPurity: "Pureza",
         specPurityVal: "≥ 99.0% verificada por análisis HPLC / MS",
-        specStorage: "Almacenamiento recomendado",
+        specStorage: "Almacenamiento",
         specStorageVal: "Conservar refrigerado entre 2°C y 8°C. Proteger de la luz.",
-        specContent: "Contenido / Concentración",
+        specContent: "Contenido",
         specUse: "Clasificación",
         specUseVal: "Reactivo químico exclusivo para investigación in vitro",
         legalTitle: "Aviso legal relativo a este producto",
-        legalP1: "Este producto está destinado exclusivamente a la investigación científica. Se clasifica únicamente como compuesto químico para investigación. Su uso se limita exclusivamente a pruebas in vitro y experimentación en laboratorio. La información disponible en nuestro sitio web sobre este producto tiene fines educativos únicamente y no debe interpretarse como un respaldo o una indicación para su uso fuera de estos límites. La introducción de este producto en humanos o animales por cualquier vía está estrictamente prohibida por ley. La manipulación de este producto debe ser realizada únicamente por profesionales autorizados y cualificados.",
-        legalP2: "Este producto no debe utilizarse como medicamento, alimento ni cosmético comercial. Los usuarios son responsables de cumplir con todas las leyes y regulaciones aplicables en relación con la manipulación y el uso de este compuesto.",
+        legalP1: "Este producto está destinado exclusivamente a la investigación científica. Se clasifica únicamente como compuesto químico para investigación. Su uso se limita exclusivamente a pruebas in vitro y experimentación en laboratorio. La introducción de este producto en humanos o animales por cualquier vía está estrictamente prohibida.",
+        legalP2: "Este producto no debe utilizarse como medicamento, alimento ni cosmético comercial.",
         viewDetails: "Ver ficha técnica"
       }
     },
@@ -118,6 +131,7 @@ const dict = {
       qty: "x",
       del: "Eliminar",
       total: "Total",
+      bonusInc: "Incluye Agua BAC de regalo",
       formTitle: "Datos del Solicitante",
       name: "Nombre completo",
       age: "Edad",
@@ -126,12 +140,12 @@ const dict = {
       send: "Enviar Pedido a WhatsApp"
     },
     calc: {
-      title: "Calculadora de Reconstitución y Dosis",
-      sub: "Convierta la masa en mg a volumen y unidades de medición U-100",
+      title: "Calculadora de Reconstitución",
+      sub: "Convierta la masa en mg a volumen y unidades U-100",
       s1: "Contenido del Frasco",
       s1d: "Masa del compuesto",
       s2: "Volumen de Diluyente",
-      s2d: "BAC / Agua Estéril / NaCl",
+      s2d: "BAC / Agua Estéril",
       s3: "Jeringa de Medición U-100",
       s3d: "unidades",
       s4: "Medida Deseada",
@@ -139,7 +153,7 @@ const dict = {
       other: "Otro",
       res: "Resultado",
       wait: "Elija el frasco, el diluyente, la jeringa y la medida para ver el resultado.",
-      errTitle: "¡El volumen excede la capacidad de la jeringa!",
+      errTitle: "¡El volumen excede la capacidad!",
       errDesc: "Considere una jeringa mayor o menos diluyente.",
       est: "Volumen estimado:",
       un: "unidades",
@@ -149,7 +163,7 @@ const dict = {
       tDose: "Medida",
       tVol: "Volumen",
       tUn: "Unidades",
-      copy: "Copiar Resumen",
+      copy: "Copiar",
       print: "IMPRIMIR",
       reset: "RESETEAR",
       msgTitle: "CALCULA MI MEDIDA",
@@ -187,39 +201,32 @@ const dict = {
     cat: {
       sub: "Coleção",
       title: "Nossos Peptídeos",
-      resSub: "NOSSOS PRODUTOS DE PESQUISA",
       resDisclaimer: "Exclusivamente para pesquisa científica e desenvolvimento laboratorial in vitro.",
-      search: "Buscar peptídeo...",
+      search: "Buscar composto...",
       sortAZ: "Ordenar: A-Z",
       sortAsc: "Preço: menor a maior",
       sortDesc: "Preço: maior a menor",
       add: "Adicionar",
       empty: "Nenhum produto encontrado.",
       sidebarBtn: "Índice de Produtos",
-      categories: {
-        all: "Todos os Produtos",
-        cosmeticos: "Peptídeos Cosméticos",
-        mezclas: "Misturas de Peptídeos (Blends)",
-        biorreguladores: "Biorreguladores",
-        peptidos: "Peptídeos de Pesquisa",
-        suministros: "Suprimentos e Diluentes"
-      },
       modal: {
         badge: "Grau de Pesquisa · Pureza ≥99% (HPLC)",
+        bonusBadge: "🎁 +1 ÁGUA BACTERIOSTÁTICA GRÁTIS INCLUÍDA",
+        bonusDesc: "Para garantir a melhor experiência, cada frasco inclui como cortesia exclusiva sua respectiva Água Bacteriostática (BAC) pronta para reconstituição, sem custo adicional.",
         purposeTitle: "Objetivo de Pesquisa e Aplicações",
         specsTitle: "Especificações Técnicas e Composição",
         specForm: "Forma física",
         specFormVal: "Pó liofilizado estéril / Solução bacteriostática",
         specPurity: "Pureza",
         specPurityVal: "≥ 99.0% verificada por análise HPLC / MS",
-        specStorage: "Armazenamento recomendado",
+        specStorage: "Armazenamento",
         specStorageVal: "Manter refrigerado entre 2°C e 8°C. Proteger da luz.",
-        specContent: "Conteúdo / Concentração",
+        specContent: "Conteúdo",
         specUse: "Classificação",
         specUseVal: "Reagente químico exclusivo para pesquisa in vitro",
         legalTitle: "Aviso legal relativo a este produto",
-        legalP1: "Este produto destina-se exclusivamente à pesquisa científica. É classificado apenas como produto químico para pesquisa. Seu uso é limitado exclusivamente a testes in vitro e experimentação em laboratório. As informações disponíveis em nosso site sobre este produto têm fins exclusivamente educativos. A introdução deste produto em humanos ou animais por qualquer via é estritamente proibida por lei.",
-        legalP2: "Este produto não deve ser utilizado como medicamento, alimento ou cosmético. Os usuários são responsáveis por cumprir todas as leis e regulamentos aplicáveis em relação ao manuseio e uso deste produto.",
+        legalP1: "Este produto destina-se exclusivamente à pesquisa científica. É classificado apenas como produto químico para pesquisa. Seu uso é limitado exclusivamente a testes in vitro e experimentação em laboratório. A introdução deste produto em humanos ou animais é estritamente proibida.",
+        legalP2: "Este produto não deve ser utilizado como medicamento, alimento ou cosmético.",
         viewDetails: "Ver ficha técnica"
       }
     },
@@ -240,6 +247,7 @@ const dict = {
       qty: "x",
       del: "Remover",
       total: "Total",
+      bonusInc: "Inclui Água BAC grátis",
       formTitle: "Dados do Cliente",
       name: "Nome completo",
       age: "Idade",
@@ -249,11 +257,11 @@ const dict = {
     },
     calc: {
       title: "Calculadora de Reconstituição e Dose",
-      sub: "Converta a dose em mg no volume e nas unidades da seringa U-100",
+      sub: "Converta a dose em mg no volume e nas unidades U-100",
       s1: "Conteúdo do Frasco",
       s1d: "Massa do composto",
       s2: "Volume de Diluente",
-      s2d: "BAC / Água Estéril / NaCl",
+      s2d: "BAC / Água Estéril",
       s3: "Seringa de Insulina U-100",
       s3d: "unidades",
       s4: "Dose Desejada",
@@ -261,7 +269,7 @@ const dict = {
       other: "Outro",
       res: "Resultado",
       wait: "Escolha o frasco, o diluente, a seringa e a dose para ver o resultado.",
-      errTitle: "Volume excede a capacidade da seringa!",
+      errTitle: "Volume excede a capacidade!",
       errDesc: "Considere uma seringa maior ou menos diluente.",
       est: "Volume estimado:",
       un: "unidades",
@@ -271,7 +279,7 @@ const dict = {
       tDose: "Dose",
       tVol: "Volume",
       tUn: "Unidades",
-      copy: "Copiar Resumo",
+      copy: "Copiar",
       print: "IMPRIMIR",
       reset: "RESETAR",
       msgTitle: "CALCULA MINHA DOSE",
@@ -309,39 +317,32 @@ const dict = {
     cat: {
       sub: "Collection",
       title: "Our Peptides",
-      resSub: "OUR RESEARCH PRODUCTS",
       resDisclaimer: "Strictly for scientific research and in vitro laboratory development.",
-      search: "Search peptide...",
+      search: "Search compound...",
       sortAZ: "Sort: A-Z",
       sortAsc: "Price: Low to High",
       sortDesc: "Price: High to Low",
       add: "Add to Cart",
       empty: "No products found.",
       sidebarBtn: "Product Index",
-      categories: {
-        all: "All Products",
-        cosmeticos: "Cosmetic Peptides",
-        mezclas: "Peptide Blends",
-        biorreguladores: "Bioregulators",
-        peptidos: "Research Peptides",
-        suministros: "Supplies & Diluents"
-      },
       modal: {
         badge: "Research Grade · Purity ≥99% (HPLC)",
+        bonusBadge: "🎁 +1 FREE BACTERIOSTATIC WATER INCLUDED",
+        bonusDesc: "As an exclusive courtesy, each vial includes its respective Bacteriostatic Water (BAC) ready for reconstitution at no additional cost.",
         purposeTitle: "Research Purpose & Applications",
         specsTitle: "Technical Specifications & Composition",
         specForm: "Physical form",
         specFormVal: "Sterile lyophilized powder / Bacteriostatic solution",
         specPurity: "Purity",
         specPurityVal: "≥ 99.0% verified via HPLC / MS analysis",
-        specStorage: "Recommended storage",
+        specStorage: "Storage",
         specStorageVal: "Store refrigerated between 2°C and 8°C. Protect from light.",
-        specContent: "Content / Strength",
+        specContent: "Content",
         specUse: "Classification",
         specUseVal: "Chemical reagent strictly for in vitro research",
         legalTitle: "Legal Disclaimer Regarding This Product",
-        legalP1: "This product is intended strictly for scientific research. It is classified solely as a research chemical. Its use is limited exclusively to in vitro testing and laboratory experimentation. The information available on our website regarding this product is for educational purposes only. Introduction of this product into humans or animals by any route is strictly prohibited by law. Handling of this product must be performed only by authorized and qualified professionals.",
-        legalP2: "This product must not be used as a drug, food, or commercial cosmetic. Users are responsible for complying with all applicable laws and regulations regarding the handling and use of this product.",
+        legalP1: "This product is intended strictly for scientific research. It is classified solely as a research chemical. Its use is limited exclusively to in vitro testing and laboratory experimentation. Introduction of this product into humans or animals by any route is strictly prohibited.",
+        legalP2: "This product must not be used as a drug, food, or commercial cosmetic.",
         viewDetails: "View specifications"
       }
     },
@@ -354,7 +355,7 @@ const dict = {
     foot: {
       tagline: "Science, purity, and precision in every synthesis.",
       legal: "© 2026 LIFE PEPTIDES BOLIVIA. For laboratory research use only.",
-      disclaimer: "Products purchased on this website are intended solely for chemical research. Not for human or animal consumption. All information is for educational purposes only."
+      disclaimer: "Products purchased on this website are intended solely for chemical research. Not for human or animal consumption."
     },
     cart: {
       title: "Your Cart",
@@ -362,6 +363,7 @@ const dict = {
       qty: "x",
       del: "Remove",
       total: "Total",
+      bonusInc: "Includes Free BAC Water",
       formTitle: "Customer Data",
       name: "Full Name",
       age: "Age",
@@ -375,7 +377,7 @@ const dict = {
       s1: "Vial Content",
       s1d: "Compound mass",
       s2: "Diluent Volume",
-      s2d: "BAC / Sterile Water / NaCl",
+      s2d: "BAC / Sterile Water",
       s3: "U-100 Insulin Syringe",
       s3d: "units",
       s4: "Desired Dose",
@@ -383,7 +385,7 @@ const dict = {
       other: "Other",
       res: "Result",
       wait: "Choose the vial, diluent, syringe, and dose to see the result.",
-      errTitle: "Volume exceeds syringe capacity!",
+      errTitle: "Volume exceeds capacity!",
       errDesc: "Consider a larger syringe or less diluent.",
       est: "Estimated volume:",
       un: "units",
@@ -393,7 +395,7 @@ const dict = {
       tDose: "Dose",
       tVol: "Volume",
       tUn: "Units",
-      copy: "Copy Summary",
+      copy: "Copy",
       print: "PRINT",
       reset: "RESET",
       msgTitle: "CALCULATE MY DOSE",
@@ -435,7 +437,6 @@ export default function Home() {
   const [formData, setFormData] = useState({ nombre: "", edad: "", correo: "", telefono: "" });
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"az" | "price-asc" | "price-desc">("az");
-  const [selectedCategory, setSelectedCategory] = useState<CatKey>("all");
 
   const [selectedProd, setSelectedProd] = useState<Producto | null>(null);
   const [modalQty, setModalQty] = useState<number>(1);
@@ -478,7 +479,7 @@ export default function Home() {
             dosis: p.dosis || "",
             precio: p.precio,
             imagen: p.imagen || "",
-            categoria: detectarCategoria(p.nombre, p.categoria),
+            categoria: detectarCategoria(p.nombre),
             descripcion: {
               es: p.descripcion_es || "",
               pt: p.descripcion_pt || "",
@@ -518,7 +519,7 @@ export default function Home() {
       window.removeEventListener("scroll", handleScroll); 
       observer.disconnect(); 
     };
-  }, [query, sort, lang, isClient, productos, selectedCategory]); 
+  }, [query, sort, lang, isClient, productos]); 
 
   const addToCart = (prod: Producto, qty: number = 1) => {
     setCart((prev) => {
@@ -535,7 +536,12 @@ export default function Home() {
     e.preventDefault();
     if (cart.length === 0) return alert(t.cart.empty);
     let mensaje = `${lang === 'es' ? 'Hola, me gustaría realizar el siguiente pedido de investigación:' : lang === 'pt' ? 'Olá, gostaria de fazer o seguinte pedido de pesquisa:' : 'Hello, I would like to place the following research order:'}\n\n👤 *${t.cart.formTitle}:*\n- ${t.cart.name}: ${formData.nombre}\n- ${t.cart.age}: ${formData.edad}\n- ${t.cart.email}: ${formData.correo}\n- ${t.cart.phone}: ${formData.telefono}\n\n🛒 *Pedido:*\n`;
-    cart.forEach((item) => { mensaje += `- ${item.cantidad}x ${item.nombre} ${item.dosis && item.dosis.trim() !== "" ? `(${item.dosis})` : ""} - $${(item.precio * item.cantidad).toFixed(2)}\n`; });
+    
+    cart.forEach((item) => { 
+      const bonoInfo = item.categoria !== "Suministros y Diluyentes" ? ` [+ ${item.cantidad}x BAC Water 🎁]` : "";
+      mensaje += `- ${item.cantidad}x ${item.nombre} ${item.dosis && item.dosis.trim() !== "" ? `(${item.dosis})` : ""}${bonoInfo} - $${(item.precio * item.cantidad).toFixed(2)}\n`; 
+    });
+    
     mensaje += `\n💰 *${t.cart.total}:* $${getTotal().toFixed(2)} USD`;
     window.open(`https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`, "_blank");
     setIsCartOpen(false);
@@ -596,11 +602,7 @@ export default function Home() {
   const cartCount = cart.reduce((total, item) => total + item.cantidad, 0);
 
   const filtered = productos
-    .filter((p) => {
-      const matchesQuery = p.nombre.toLowerCase().includes(query.toLowerCase());
-      const matchesCat = selectedCategory === "all" || p.categoria === selectedCategory;
-      return matchesQuery && matchesCat;
-    })
+    .filter((p) => p.nombre.toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => {
       if (sort === "price-asc") return a.precio - b.precio;
       if (sort === "price-desc") return b.precio - a.precio;
@@ -612,7 +614,12 @@ export default function Home() {
     setModalQty(1);
   };
 
-  const categoriasOrden: Exclude<CatKey, "all">[] = ["cosmeticos", "mezclas", "biorreguladores", "peptidos", "suministros"];
+  // Extraemos las categorías exactas y únicas que tienen los productos cargados
+  const categoriasUnicas = Array.from(new Set(productos.map(p => p.categoria))).sort((a, b) => {
+    if (a === "Suministros y Diluyentes") return 1;
+    if (b === "Suministros y Diluyentes") return -1;
+    return a.localeCompare(b);
+  });
 
   if (!isClient) {
     return <div suppressHydrationWarning className="min-h-screen bg-[#0a0f1c]" />;
@@ -661,7 +668,7 @@ export default function Home() {
         )}
       </nav>
 
-      {/* BOTÓN FLOTANTE LATERAL INFERIOR "LISTA DE PRODUCTOS" (REDISEÑADO) */}
+      {/* BOTÓN FLOTANTE LATERAL INFERIOR "LISTA DE PRODUCTOS" */}
       <button
         onClick={() => setIsSidebarOpen(true)}
         className="fixed bottom-5 sm:bottom-6 left-4 sm:left-6 z-30 bg-[#0a101d]/95 backdrop-blur-md border border-gold/40 hover:bg-gold hover:border-gold text-gold-light hover:text-navy font-bold text-[10px] sm:text-[11px] tracking-[2px] uppercase py-3 px-4 sm:px-5 rounded-full shadow-[0_5px_20px_rgba(203,161,92,0.25)] transition-all duration-300 flex items-center justify-center gap-2 group animate-fade-up [animation-delay:1600ms]"
@@ -671,7 +678,7 @@ export default function Home() {
         <span className="sm:hidden">Índice</span>
       </button>
 
-      {/* DRAWER LATERAL CON DIVISIONES DE PÉPTIDOS Y LISTA COMPLETA */}
+      {/* DRAWER LATERAL CON ÍNDICE DINÁMICO POR FUNCIONES */}
       {isSidebarOpen && (
         <div className="fixed inset-0 z-50 flex">
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
@@ -685,22 +692,15 @@ export default function Home() {
             </div>
 
             <div className="space-y-6">
-              {categoriasOrden.map((catKey) => {
+              {categoriasUnicas.map((catKey) => {
                 const itemsCat = productos.filter(p => p.categoria === catKey).sort((a, b) => a.nombre.localeCompare(b.nombre));
                 if (itemsCat.length === 0) return null;
                 return (
                   <div key={catKey}>
-                    <button
-                      onClick={() => {
-                        setSelectedCategory(catKey);
-                        setIsSidebarOpen(false);
-                        document.getElementById("productos")?.scrollIntoView({ behavior: "smooth" });
-                      }}
-                      className="w-full text-left bg-gradient-to-r from-gold/25 to-gold/5 border-l-2 border-gold px-3 py-2 text-xs font-bold uppercase tracking-[2px] text-gold-light mb-2.5 hover:from-gold/35 transition-all flex justify-between items-center"
-                    >
-                      <span>{t.cat.categories[catKey]}</span>
-                      <span className="text-[10px] text-gold/80">({itemsCat.length})</span>
-                    </button>
+                    <div className="w-full text-left bg-gradient-to-r from-gold/25 to-gold/5 border-l-2 border-gold px-3 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-[1px] sm:tracking-[2px] text-gold-light mb-2.5 flex justify-between items-center">
+                      <span className="pr-2">{catKey}</span>
+                      <span className="text-[10px] text-gold/80 shrink-0">({itemsCat.length})</span>
+                    </div>
                     <ul className="space-y-1 pl-2">
                       {itemsCat.map((item) => (
                         <li key={item.id}>
@@ -725,7 +725,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL DE FICHA TÉCNICA Y AVISO LEGAL DEL PRODUCTO */}
+      {/* MODAL DE FICHA TÉCNICA CON BANNER DE AGUA BAC GRATIS */}
       {selectedProd && (
         <div
           className="fixed inset-0 z-50 flex justify-center items-start md:items-center bg-[#060911]/90 backdrop-blur-md p-3 sm:p-5 overflow-y-auto animate-fade-up"
@@ -736,10 +736,10 @@ export default function Home() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center px-5 py-4 border-b border-gold/15 bg-[#0a101d]">
-              <span className="text-[10px] sm:text-xs uppercase tracking-[2.5px] text-gold font-semibold">
-                {t.cat.categories[(selectedProd.categoria as CatKey) || "peptidos"]}
+              <span className="text-[9px] sm:text-[10px] uppercase tracking-[2px] text-gold font-semibold truncate pr-4">
+                {selectedProd.categoria}
               </span>
-              <button onClick={() => setSelectedProd(null)} className="text-gold-light/70 hover:text-gold text-3xl leading-none px-2">&times;</button>
+              <button onClick={() => setSelectedProd(null)} className="text-gold-light/70 hover:text-gold text-3xl leading-none px-2 shrink-0">&times;</button>
             </div>
 
             <div className="p-5 sm:p-8 max-h-[82vh] overflow-y-auto space-y-8">
@@ -759,7 +759,7 @@ export default function Home() {
 
                 <div className="md:col-span-7 flex flex-col justify-between space-y-5 text-left">
                   <div>
-                    <div className="inline-block bg-gold/10 border border-gold/30 text-gold-light text-[10px] uppercase tracking-[2px] px-3 py-1 rounded-full mb-3">
+                    <div className="inline-block bg-gold/10 border border-gold/30 text-gold-light text-[9px] sm:text-[10px] uppercase tracking-[2px] px-3 py-1 rounded-full mb-3">
                       {t.cat.modal.badge}
                     </div>
                     <h2 className="font-display text-2xl sm:text-3xl text-gold-light tracking-wider">
@@ -773,10 +773,21 @@ export default function Home() {
                     <div className="text-2xl sm:text-3xl font-display text-white-lp mt-3">
                       ${selectedProd.precio.toFixed(2)} <span className="text-xs text-gold/70 font-sans">USD</span>
                     </div>
+
+                    {/* BANNER PROMOCIONAL DE AGUA BACTERIOSTÁTICA */}
+                    {selectedProd.categoria !== "Suministros y Diluyentes" && (
+                      <div className="mt-4 bg-gradient-to-r from-gold/15 to-transparent border-l-[3px] border-gold p-3 rounded-r-lg flex items-center gap-3">
+                        <span className="text-2xl drop-shadow-[0_0_8px_rgba(203,161,92,0.8)] animate-pulse">🎁</span>
+                        <div>
+                          <p className="text-gold-light text-[10px] sm:text-xs font-bold uppercase tracking-wider">{t.cat.modal.bonusBadge}</p>
+                          <p className="text-white-lp/70 text-[9px] sm:text-[10px] mt-1 leading-relaxed pr-2">{t.cat.modal.bonusDesc}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="bg-[#0a101d] border border-gold/15 rounded-lg p-4 space-y-2">
-                    <h4 className="text-xs uppercase tracking-[2px] text-gold font-bold">
+                    <h4 className="text-[11px] sm:text-xs uppercase tracking-[2px] text-gold font-bold">
                       {t.cat.modal.purposeTitle}
                     </h4>
                     <p className="text-xs sm:text-sm text-white-lp/85 leading-relaxed">
@@ -790,7 +801,7 @@ export default function Home() {
                   </div>
 
                   <div className="bg-[#0a101d] border border-gold/15 rounded-lg p-4">
-                    <h4 className="text-xs uppercase tracking-[2px] text-gold font-bold mb-3">
+                    <h4 className="text-[11px] sm:text-xs uppercase tracking-[2px] text-gold font-bold mb-3">
                       {t.cat.modal.specsTitle}
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
@@ -837,7 +848,7 @@ export default function Home() {
                         setSelectedProd(null);
                         setIsCartOpen(true);
                       }}
-                      className="flex-1 bg-gold hover:bg-gold-light text-navy font-bold text-xs uppercase tracking-[2px] py-3.5 px-6 rounded-lg transition-all duration-300 shadow-[0_6px_20px_rgba(203,161,92,0.3)]"
+                      className="flex-1 bg-gold hover:bg-gold-light text-navy font-bold text-[11px] sm:text-xs uppercase tracking-[2px] py-3.5 px-4 sm:px-6 rounded-lg transition-all duration-300 shadow-[0_6px_20px_rgba(203,161,92,0.3)]"
                     >
                       {t.cat.add} · ${(selectedProd.precio * modalQty).toFixed(2)} USD
                     </button>
@@ -846,14 +857,14 @@ export default function Home() {
               </div>
 
               <div className="bg-[#141d33] border border-gold/25 rounded-xl p-5 sm:p-6 text-left space-y-3">
-                <div className="flex items-center gap-2 text-gold font-bold text-xs sm:text-sm uppercase tracking-wider">
-                  <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <div className="flex items-center gap-2 text-gold font-bold text-[11px] sm:text-sm uppercase tracking-wider">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   <span>{t.cat.modal.legalTitle}</span>
                 </div>
-                <p className="text-[11px] sm:text-xs text-white-lp/75 leading-relaxed font-sans">
+                <p className="text-[10px] sm:text-xs text-white-lp/75 leading-relaxed font-sans">
                   {t.cat.modal.legalP1}
                 </p>
-                <p className="text-[11px] sm:text-xs text-white-lp/75 leading-relaxed font-sans">
+                <p className="text-[10px] sm:text-xs text-white-lp/75 leading-relaxed font-sans">
                   {t.cat.modal.legalP2}
                 </p>
               </div>
@@ -1082,6 +1093,13 @@ export default function Home() {
                         <span className="text-white-lp/45 text-xs font-sans">
                           {item.dosis && item.dosis.trim() !== "" ? `${item.dosis} · ` : ""}${item.precio.toFixed(2)} c/u
                         </span>
+                        
+                        {/* CONFIRMACIÓN DE AGUA DE REGALO EN EL CARRITO */}
+                        {item.categoria !== "Suministros y Diluyentes" && (
+                          <span className="block text-gold text-[10px] mt-1.5 font-bold tracking-wide">
+                            🎁 {item.cantidad > 1 ? `Incluye ${item.cantidad}x Aguas BAC de regalo` : t.cart.bonusInc}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
                         <span className="text-white-lp/80 text-sm font-sans">{t.cart.qty}{item.cantidad}</span>
@@ -1188,22 +1206,6 @@ export default function Home() {
           {t.cat.resDisclaimer}
         </p>
 
-        <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto mb-8 px-2 reveal">
-          {(["all", "cosmeticos", "mezclas", "biorreguladores", "peptidos", "suministros"] as CatKey[]).map((catKey) => (
-            <button
-              key={catKey}
-              onClick={() => setSelectedCategory(catKey)}
-              className={`px-3.5 py-2 text-[10px] sm:text-xs uppercase tracking-[1.5px] font-semibold transition-all rounded border ${
-                selectedCategory === catKey
-                  ? "bg-gold text-navy border-gold shadow-[0_0_20px_rgba(203,161,92,0.3)]"
-                  : "bg-navy/70 text-white-lp/70 border-gold/20 hover:border-gold/60 hover:text-gold-light"
-              }`}
-            >
-              {t.cat.categories[catKey]}
-            </button>
-          ))}
-        </div>
-
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center max-w-2xl mx-auto mb-10 sm:mb-14 px-2 reveal">
           <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.cat.search} className="w-full sm:w-72 bg-transparent border border-gold/25 px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-white-lp placeholder:text-white-lp/35 focus:outline-none focus:border-gold transition-colors font-sans" />
           <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="w-full sm:w-52 bg-navy border border-gold/25 px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-white-lp/80 focus:outline-none focus:border-gold transition-colors font-sans">
@@ -1233,6 +1235,13 @@ export default function Home() {
                   <span className="absolute top-2 left-2 sm:top-3.5 sm:left-3.5 z-20 text-[9px] sm:text-[11px] tracking-[1.5px] sm:tracking-[2px] text-gold/80 font-sans bg-[#0a0f1c]/80 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded backdrop-blur-md border border-gold/20">
                     {String(index + 1).padStart(2, "0")}
                   </span>
+                  
+                  {/* Etiqueta flotante Promo Agua en cada foto */}
+                  {prod.categoria !== "Suministros y Diluyentes" && (
+                    <div className="absolute top-2 right-2 sm:top-3.5 sm:right-3.5 z-20 bg-gradient-to-r from-gold to-gold-light text-navy text-[8px] sm:text-[9px] font-black px-2 py-1 rounded shadow-[0_2px_10px_rgba(203,161,92,0.5)] uppercase tracking-wider animate-pulse">
+                      🎁 + BAC GRATIS
+                    </div>
+                  )}
 
                   {prod.imagen && prod.imagen.trim() !== "" ? (
                     <img 
@@ -1251,8 +1260,8 @@ export default function Home() {
 
                 <div className="relative z-10 flex-grow flex flex-col justify-between p-3 sm:p-5 md:p-6 border-t border-gold/30 text-center bg-navy-2">
                   <div onClick={() => abrirProductoModal(prod)} className="cursor-pointer">
-                    <span className="block text-[9px] sm:text-[10px] uppercase tracking-[1.5px] text-white-lp/45 mb-1">
-                      {t.cat.categories[(prod.categoria as CatKey) || "peptidos"]}
+                    <span className="block text-[9px] sm:text-[10px] uppercase tracking-[1.5px] text-white-lp/45 mb-1 truncate">
+                      {prod.categoria}
                     </span>
                     <h4 className="text-gold-light hover:text-gold text-xs sm:text-base md:text-lg font-semibold tracking-wide sm:tracking-wider leading-snug font-sans line-clamp-2 transition-colors">
                       {prod.nombre}
