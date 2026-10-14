@@ -20,7 +20,6 @@ type CartItem = Producto & { cantidad: number };
 
 const numeroWhatsApp = "59178272722";
 
-// Clasificador exacto según la tabla científica proporcionada
 // Clasificador exacto y flexible según la tabla científica proporcionada
 const detectarCategoria = (nombre: string): string => {
   const n = nombre.toUpperCase();
@@ -615,7 +614,6 @@ export default function Home() {
     setModalQty(1);
   };
 
-  // Extraemos las categorías exactas y únicas que tienen los productos cargados
   const categoriasUnicas = Array.from(new Set(productos.map(p => p.categoria))).sort((a, b) => {
     if (a === "Suministros y Diluyentes") return 1;
     if (b === "Suministros y Diluyentes") return -1;
@@ -760,7 +758,7 @@ export default function Home() {
 
                 <div className="md:col-span-7 flex flex-col justify-between space-y-5 text-left">
                   <div>
-                    <div className="inline-block bg-gold/10 border border-gold/30 text-gold-light text-[9px] sm:text-[10px] uppercase tracking-[2px] px-3 py-1 rounded-full mb-3">
+                    <div className="inline-block bg-gold/10 border border-gold/30 text-gold-light text-[10px] uppercase tracking-[2px] px-3 py-1 rounded-full mb-3">
                       {t.cat.modal.badge}
                     </div>
                     <h2 className="font-display text-2xl sm:text-3xl text-gold-light tracking-wider">
@@ -775,7 +773,7 @@ export default function Home() {
                       ${selectedProd.precio.toFixed(2)} <span className="text-xs text-gold/70 font-sans">USD</span>
                     </div>
 
-                    {/* BANNER PROMOCIONAL DE AGUA BACTERIOSTÁTICA */}
+                    {/* BANNER PROMOCIONAL DE AGUA BACTERIOSTÁTICA (CON ANIMACIÓN SEGURO AQUÍ) */}
                     {selectedProd.categoria !== "Suministros y Diluyentes" && (
                       <div className="mt-4 bg-gradient-to-r from-gold/15 to-transparent border-l-[3px] border-gold p-3 rounded-r-lg flex items-center gap-3">
                         <span className="text-2xl drop-shadow-[0_0_8px_rgba(203,161,92,0.8)] animate-pulse">🎁</span>
@@ -1052,7 +1050,7 @@ export default function Home() {
 
                     <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-auto">
                       <button onClick={handleCopyCalc} className="bg-[#21262d] hover:bg-[#30363d] text-white text-xs font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> {t.calc.copy}
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> {t.calc.copy}
                       </button>
                       <button onClick={handleWhatsAppCalc} className="bg-[#25D366] hover:bg-[#128C7E] text-white text-xs font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-[0_0_15px_rgba(37,211,102,0.2)]">
                         <svg className="w-4 h-4 fill-white" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zM223.9 413.6c-33.6 0-66.5-9-95.4-26l-6.8-4-70.9 18.6 18.9-69.1-4.4-7C46.8 296 36 260.6 36 224c0-103.7 84.4-188.2 188.2-188.2 55.3 0 107.3 21.5 146.4 60.6 39.1 39.1 60.6 91.2 60.6 146.4 0 103.7-84.4 188.2-188.2 188.2zM326.6 288.7c-5.6-2.8-33.4-16.5-38.6-18.4-5.2-1.9-9-2.8-12.8 2.8-3.8 5.6-14.6 18.4-17.9 22.2-3.3 3.8-6.6 4.2-12.2 1.4-5.6-2.8-23.8-8.8-45.3-28.1-16.7-15-28-33.6-31.3-39.2-3.3-5.6-.4-8.6 2.4-11.4 2.5-2.5 5.6-6.6 8.5-9.9 2.8-3.3 3.8-5.6 5.6-9.4 1.9-3.8.9-7.1-.5-9.9-1.4-2.8-12.8-30.9-17.5-42.3-4.6-11.1-9.3-9.6-12.8-9.8-3.3-.2-7.1-.2-10.8-.2-3.8 0-10.2 1.4-15.5 7.1-5.4 5.6-20.4 19.9-20.4 48.5s20.9 56.2 23.8 60c2.8 3.8 40.8 62.3 98.9 87.4 13.8 5.9 24.6 9.4 33 12 13.8 4.4 26.4 3.8 36.3 2.3 11.2-1.7 33.4-13.6 38.1-26.8 4.7-13.2 4.7-24.6 3.3-26.8-1.4-2.2-5.2-3.3-10.8-6.1z" />
@@ -1237,9 +1235,8 @@ export default function Home() {
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   
-                  {/* Etiqueta flotante Promo Agua en cada foto */}
                   {prod.categoria !== "Suministros y Diluyentes" && (
-                    <div className="absolute top-2 right-2 sm:top-3.5 sm:right-3.5 z-20 bg-gradient-to-r from-gold to-gold-light text-navy text-[8px] sm:text-[9px] font-black px-2 py-1 rounded shadow-[0_2px_10px_rgba(203,161,92,0.5)] uppercase tracking-wider animate-pulse">
+                    <div className="absolute top-2 right-2 sm:top-3.5 sm:right-3.5 z-20 bg-gradient-to-r from-gold to-gold-light text-navy text-[8px] sm:text-[9px] font-black px-2 py-1 rounded shadow-md uppercase tracking-wider transform-gpu">
                       🎁 + BAC GRATIS
                     </div>
                   )}
