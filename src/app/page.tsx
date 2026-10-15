@@ -42,7 +42,7 @@ const detectarCategoria = (nombre: string): string => {
   if (n.includes("KISSPEPTIN")) return "Función reproductiva";
   if (n.includes("KPV")) return "Antiinflamatorio experimental";
   if (n.includes("MELANOTAN")) return "Pigmentación de la piel";
-  if (n.includes("NAD")) return "Metabolismo mitocondrial"; // NAD+ separado
+  if (n.includes("NAD")) return "Metabolismo mitocondrial";
   if (n.includes("MITO PRIME") || n.includes("MITOPRIME")) return "Metabolismo mitocondrial";
   if (n.includes("MOTS")) return "Metabolismo energético";
   if (n.includes("PT-141") || n.includes("PT 141") || n.includes("PT141")) return "Función sexual";
@@ -464,17 +464,13 @@ export default function Home() {
 
   const standardDoses = [0.25, 0.5, 1, 1.7, 2, 2.4, 2.5, 4, 5, 7.5, 10, 12, 12.5, 15, 17.5, 20, 25, 30];
 
-  // Tooltip Inteligente para la Calculadora
   useEffect(() => {
     let isMounted = true;
-    
-    // Aparece a los 10 segundos
     const initialTimer = setTimeout(() => {
       if(isMounted) setShowCalcTooltip(true);
       setTimeout(() => { if(isMounted) setShowCalcTooltip(false); }, 5000);
     }, 10000);
 
-    // Vuelve a aparecer cada 35 segundos
     const intervalTimer = setInterval(() => {
       if(isMounted) setShowCalcTooltip(true);
       setTimeout(() => { if(isMounted) setShowCalcTooltip(false); }, 5000);
@@ -661,7 +657,6 @@ export default function Home() {
           <img src="/logo.jpeg" alt="Life Peptides" className="w-full h-auto transition-transform duration-500 hover:scale-105" style={circularMask} />
         </div>
 
-        {/* MENÚ DE PC CON NUEVO BOTÓN "CALCULA TU DOSIS" */}
         <div className="hidden md:flex gap-10 lg:gap-12 text-[13px] tracking-[3px] uppercase text-white-lp/80 font-sans items-center">
           <a href="#productos" className="relative py-1 transition-colors duration-300 hover:text-gold-light after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-px after:bg-gold after:transition-all after:duration-400 hover:after:w-full">{t.nav.prod}</a>
           <a href="#ciencia" className="relative py-1 transition-colors duration-300 hover:text-gold-light after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-px after:bg-gold after:transition-all after:duration-400 hover:after:w-full">{t.nav.sci}</a>
@@ -669,7 +664,6 @@ export default function Home() {
           <a href="/terminos" className="relative py-1 transition-colors duration-300 text-gold hover:text-gold-light after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-px after:bg-gold after:transition-all after:duration-400 hover:after:w-full">
             {lang === "es" ? "Términos de Uso" : lang === "pt" ? "Termos de Uso" : "Terms of Use"}
           </a>
-          {/* NUEVO BOTÓN CALCULADORA EN MENÚ */}
           <button onClick={() => setIsCalcOpen(true)} className="relative py-1 font-bold transition-colors duration-300 text-blue-400 hover:text-blue-300 after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-px after:bg-blue-400 after:transition-all after:duration-400 hover:after:w-full">
             {t.nav.calc}
           </button>
@@ -689,7 +683,6 @@ export default function Home() {
           <button className="md:hidden text-gold-light" onClick={() => setMenuOpen((v) => !v)}><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">{menuOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.3} d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.3} d="M4 7h16M4 12h16M4 17h16" />}</svg></button>
         </div>
         
-        {/* MENÚ MÓVIL DESPLEGABLE */}
         {menuOpen && (
           <div className="absolute top-full left-0 w-full bg-[#111a2e] border-b border-gold/15 flex flex-col items-center py-6 gap-5 md:hidden animate-fade-up shadow-2xl">
             <a href="#productos" onClick={() => setMenuOpen(false)} className="text-sm tracking-[3px] uppercase text-white-lp/85 hover:text-gold-light transition-colors">{t.nav.prod}</a>
@@ -762,7 +755,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL DE FICHA TÉCNICA CON BANNER DE AGUA BAC GRATIS */}
+      {/* MODAL DE FICHA TÉCNICA */}
       {selectedProd && (
         <div
           className="fixed inset-0 z-50 flex justify-center items-start md:items-center bg-[#060911]/90 backdrop-blur-md p-3 sm:p-5 overflow-y-auto animate-fade-up"
@@ -781,7 +774,6 @@ export default function Home() {
 
             <div className="p-5 sm:p-8 max-h-[82vh] overflow-y-auto space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-center">
-                
                 <div className="md:col-span-5 bg-[#060911] border border-gold/15 rounded-lg overflow-hidden aspect-[9/14] max-h-[380px] mx-auto w-full flex items-center justify-center relative">
                   {selectedProd.imagen && selectedProd.imagen.trim() !== "" ? (
                     <img
@@ -1087,7 +1079,7 @@ export default function Home() {
 
                     <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-auto">
                       <button onClick={handleCopyCalc} className="bg-[#21262d] hover:bg-[#30363d] text-white text-xs font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> {t.calc.copy}
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> {t.calc.copy}
                       </button>
                       <button onClick={handleWhatsAppCalc} className="bg-[#25D366] hover:bg-[#128C7E] text-white text-xs font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-[0_0_15px_rgba(37,211,102,0.2)]">
                         <svg className="w-4 h-4 fill-white" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zM223.9 413.6c-33.6 0-66.5-9-95.4-26l-6.8-4-70.9 18.6 18.9-69.1-4.4-7C46.8 296 36 260.6 36 224c0-103.7 84.4-188.2 188.2-188.2 55.3 0 107.3 21.5 146.4 60.6 39.1 39.1 60.6 91.2 60.6 146.4 0 103.7-84.4 188.2-188.2 188.2zM326.6 288.7c-5.6-2.8-33.4-16.5-38.6-18.4-5.2-1.9-9-2.8-12.8 2.8-3.8 5.6-14.6 18.4-17.9 22.2-3.3 3.8-6.6 4.2-12.2 1.4-5.6-2.8-23.8-8.8-45.3-28.1-16.7-15-28-33.6-31.3-39.2-3.3-5.6-.4-8.6 2.4-11.4 2.5-2.5 5.6-6.6 8.5-9.9 2.8-3.3 3.8-5.6 5.6-9.4 1.9-3.8.9-7.1-.5-9.9-1.4-2.8-12.8-30.9-17.5-42.3-4.6-11.1-9.3-9.6-12.8-9.8-3.3-.2-7.1-.2-10.8-.2-3.8 0-10.2 1.4-15.5 7.1-5.4 5.6-20.4 19.9-20.4 48.5s20.9 56.2 23.8 60c2.8 3.8 40.8 62.3 98.9 87.4 13.8 5.9 24.6 9.4 33 12 13.8 4.4 26.4 3.8 36.3 2.3 11.2-1.7 33.4-13.6 38.1-26.8 4.7-13.2 4.7-24.6 3.3-26.8-1.4-2.2-5.2-3.3-10.8-6.1z" />
@@ -1182,6 +1174,171 @@ export default function Home() {
         </div>
       )}
 
+      {/* HERO */}
+      <section className="relative min-h-[92vh] pt-24 pb-12 flex flex-col justify-center items-center text-center px-5 overflow-hidden">
+        <div className="absolute inset-0 tech-grid" />
+        <div className="glow-orb w-[420px] h-[420px] bg-gold/10 top-[-10%] left-1/2 -translate-x-1/2" />
+        <div className="glow-orb w-[280px] h-[280px] bg-gold/5 bottom-[5%] left-[15%] [animation-delay:2s]" />
+        <span className="particle" style={{ left: "12%", bottom: "10%", animationDelay: "0s" }} />
+        <span className="particle" style={{ left: "28%", bottom: "10%", animationDelay: "1.5s" }} />
+        <span className="particle" style={{ left: "44%", bottom: "10%", animationDelay: "3s" }} />
+        <span className="particle" style={{ left: "62%", bottom: "10%", animationDelay: "0.8s" }} />
+        <span className="particle" style={{ left: "78%", bottom: "10%", animationDelay: "2.2s" }} />
+        <span className="particle" style={{ left: "90%", bottom: "10%", animationDelay: "4s" }} />
+
+        <div className="relative z-10 opacity-0 animate-fade-up [animation-delay:150ms] text-[10px] md:text-xs tracking-[4px] sm:tracking-[6px] text-gold uppercase mb-6 sm:mb-8 font-sans">
+          {t.hero.sub}
+        </div>
+
+        <div className="relative z-10 opacity-0 animate-fade-up [animation-delay:350ms] mb-6">
+          <img src="/logo.jpeg" alt="Life Peptides" className="w-[55vw] max-w-[200px] sm:max-w-[280px] md:max-w-[340px] mx-auto" style={ovalMask} />
+        </div>
+
+        <h1 className="relative z-10 opacity-0 animate-fade-up [animation-delay:600ms] font-display text-2xl sm:text-4xl md:text-5xl tracking-[4px] sm:tracking-[6px] md:tracking-[10px] text-gold-light font-light">
+          {t.hero.title}
+        </h1>
+
+        <p className="relative z-10 w-[90vw] max-w-lg mx-auto mt-5 sm:mt-7 text-xs sm:text-sm md:text-base leading-relaxed text-white-lp/70 opacity-0 animate-fade-up [animation-delay:850ms] font-sans">
+          {t.hero.desc}
+        </p>
+
+        <a href="#productos" className="relative z-10 mt-8 sm:mt-10 px-8 sm:px-10 py-3.5 sm:py-4 border border-gold/70 text-gold-light tracking-[3px] text-xs md:text-sm uppercase transition-all duration-500 hover:bg-gold hover:text-navy hover:border-gold hover:shadow-[0_0_40px_rgba(203,161,92,0.35)] opacity-0 animate-fade-up [animation-delay:1100ms] font-sans">
+          {t.hero.btn}
+        </a>
+      </section>
+
+      {/* BENEFICIOS */}
+      <section id="beneficios" className="relative py-20 md:py-40 px-5 md:px-6">
+        <div className="text-center text-[10px] md:text-xs tracking-[5px] text-gold uppercase mb-4 reveal font-sans">{t.ben.sub}</div>
+        <h2 className="text-center font-display text-3xl md:text-5xl tracking-[3px] text-gold-light mb-14 md:mb-24 font-light reveal">{t.ben.title}</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 max-w-6xl mx-auto divide-y md:divide-y-0 md:divide-x divide-gold/10">
+          {t.ben.cards.map((it, i) => (
+            <div key={it.n} className="group relative px-6 md:px-10 py-10 text-center reveal" style={{ transitionDelay: `${i * 120}ms` }}>
+              <div className="font-display text-5xl md:text-6xl text-gold/25 group-hover:text-gold/50 transition-colors duration-500 mb-4">{it.n}</div>
+              <h3 className="text-sm md:text-base tracking-[3px] uppercase text-gold-light mb-4 font-sans">{it.t}</h3>
+              <p className="text-xs md:text-sm leading-relaxed text-white-lp/60 max-w-[240px] mx-auto font-sans">{it.d}</p>
+              <div className="mx-auto mt-6 w-8 h-px bg-gold/40 group-hover:w-16 transition-all duration-500" />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CATÁLOGO */}
+      <section id="productos" className="relative py-20 md:py-36 px-3 sm:px-6 bg-navy-2">
+        <div className="text-center text-[10px] md:text-xs tracking-[5px] text-gold uppercase mb-3 reveal font-sans">{t.cat.sub}</div>
+        <h2 className="text-center font-display text-2xl sm:text-3xl md:text-5xl tracking-[3px] text-gold-light mb-3 font-light reveal">{t.cat.title}</h2>
+        
+        <p className="text-center text-[10px] sm:text-xs text-white-lp/45 max-w-xl mx-auto mb-8 sm:mb-10 reveal font-sans">
+          {t.cat.resDisclaimer}
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center max-w-2xl mx-auto mb-10 sm:mb-14 px-2 reveal">
+          <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.cat.search} className="w-full sm:w-72 bg-transparent border border-gold/25 px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-white-lp placeholder:text-white-lp/35 focus:outline-none focus:border-gold transition-colors font-sans" />
+          <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="w-full sm:w-52 bg-navy border border-gold/25 px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-white-lp/80 focus:outline-none focus:border-gold transition-colors font-sans">
+            <option value="az">{t.cat.sortAZ}</option>
+            <option value="price-asc">{t.cat.sortAsc}</option>
+            <option value="price-desc">{t.cat.sortDesc}</option>
+          </select>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+             <p className="text-gold-light text-lg tracking-widest uppercase animate-pulse">{t.cat.empty}</p>
+          </div>
+        ) : productos.length === 0 ? (
+          <p className="text-center text-white-lp/40 mt-16 text-sm font-sans">No hay productos visibles en este momento.</p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-7 max-w-7xl mx-auto">
+            {filtered.map((prod, index) => (
+              <div key={`${prod.id}`} className="group relative border border-gold/15 hover:border-gold/50 flex flex-col h-full overflow-hidden transition-all duration-500 hover:-translate-y-1 reveal bg-[#060911]">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(203,161,92,0.10),transparent_65%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10" />
+                <div className="absolute top-0 left-0 h-px w-0 bg-gradient-to-r from-transparent via-gold to-transparent group-hover:w-full transition-all duration-700 z-20" />
+
+                <div
+                  onClick={() => abrirProductoModal(prod)}
+                  className="relative w-full aspect-[9/14] sm:aspect-[9/15] overflow-hidden bg-[#060911] flex items-center justify-center cursor-pointer"
+                >
+                  <span className="absolute top-2 left-2 sm:top-3.5 sm:left-3.5 z-20 text-[9px] sm:text-[11px] tracking-[1.5px] sm:tracking-[2px] text-gold/80 font-sans bg-[#0a0f1c]/80 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded backdrop-blur-md border border-gold/20">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  
+                  {prod.categoria !== "Suministros y Diluyentes" && (
+                    <div className="absolute top-2 right-2 sm:top-3.5 sm:right-3.5 z-20 bg-gradient-to-r from-gold to-gold-light text-navy text-[8px] sm:text-[9px] font-black px-2 py-1 rounded shadow-md uppercase tracking-wider transform-gpu">
+                      🎁 + BAC GRATIS
+                    </div>
+                  )}
+
+                  {prod.imagen && prod.imagen.trim() !== "" ? (
+                    <img 
+                      src={prod.imagen} 
+                      alt={prod.nombre} 
+                      className="w-full h-full object-cover object-center scale-[1.03] transition-transform duration-700 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="vial scale-110 sm:scale-150 transition-transform duration-500 group-hover:scale-125 sm:group-hover:scale-[1.65]" />
+                  )}
+
+                  <div className="absolute bottom-2 right-2 z-20 bg-[#0a0f1c]/85 border border-gold/30 text-gold-light text-[9px] sm:text-[10px] uppercase tracking-wider px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                    {t.cat.modal.viewDetails}
+                  </div>
+                </div>
+
+                <div className="relative z-10 flex-grow flex flex-col justify-between p-3 sm:p-5 md:p-6 border-t border-gold/30 text-center bg-navy-2">
+                  <div onClick={() => abrirProductoModal(prod)} className="cursor-pointer">
+                    <span className="block text-[9px] sm:text-[10px] uppercase tracking-[1.5px] text-white-lp/45 mb-1 truncate">
+                      {prod.categoria}
+                    </span>
+                    <h4 className="text-gold-light hover:text-gold text-xs sm:text-base md:text-lg font-semibold tracking-wide sm:tracking-wider leading-snug font-sans line-clamp-2 transition-colors">
+                      {prod.nombre}
+                    </h4>
+                    {prod.dosis && prod.dosis.trim() !== "" && (
+                      <span className="block text-gold text-[10px] sm:text-xs md:text-sm font-bold tracking-[1.5px] sm:tracking-[2px] mt-0.5 sm:mt-1 font-sans uppercase">
+                        {prod.dosis}
+                      </span>
+                    )}
+                    <p className="text-white-lp/65 text-[10px] sm:text-xs leading-relaxed mt-1.5 sm:mt-2.5 font-sans italic opacity-90 line-clamp-3">
+                      {prod.descripcion[lang] || prod.descripcion['es']}
+                    </p>
+                  </div>
+
+                  <div className="mt-3 sm:mt-5 pt-2 sm:pt-3 border-t border-gold/10">
+                    <span className="block text-gold text-sm sm:text-lg md:text-xl tracking-wider sm:tracking-widest mb-2.5 sm:mb-3.5 font-display">
+                      ${prod.precio.toFixed(2)} <span className="text-[9px] sm:text-[11px] text-gold/60 font-sans">USD</span>
+                    </span>
+                    <button onClick={() => addToCart(prod)} className="w-full border border-gold/60 text-gold-light text-[9px] sm:text-[10px] md:text-[11px] uppercase tracking-[1px] sm:tracking-[2px] py-2 sm:py-3 px-1 transition-all duration-300 hover:bg-gold hover:text-navy hover:border-gold font-sans">
+                      {t.cat.add}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* CIENCIA */}
+      <section id="ciencia" className="relative py-20 md:py-40 px-5 md:px-6 border-b border-gold/5 overflow-hidden">
+        <div className="glow-orb w-[360px] h-[360px] bg-gold/8 top-1/2 left-1/4 -translate-y-1/2" />
+        <div className="relative grid grid-cols-1 md:grid-cols-2 gap-14 md:gap-20 max-w-6xl mx-auto items-center">
+          <div className="h-80 md:h-[420px] border border-gold/15 relative flex items-center justify-center reveal overflow-hidden bg-[radial-gradient(ellipse_at_center,rgba(203,161,92,0.06),transparent_70%)]">
+            <div className="absolute inset-0 tech-grid opacity-60" />
+            <div className="dna-3d relative z-10 flex flex-col justify-center items-center gap-[10px] md:gap-[13px]">
+              {Array.from({ length: 16 }).map((_, i) => (
+                <div key={i} className="dna-rung w-[70px] md:w-[100px]" style={{ animationDelay: `${i * -0.25}s` }} />
+              ))}
+            </div>
+          </div>
+
+          <div className="reveal text-center md:text-left">
+            <div className="text-[10px] md:text-xs tracking-[5px] text-gold uppercase mb-4 font-sans">{t.sci.sub}</div>
+            <h2 className="font-display text-2xl md:text-4xl tracking-[2px] text-gold-light mb-6 font-light">{t.sci.title}</h2>
+            <p className="text-sm leading-loose text-white-lp/65 mb-4 font-sans">{t.sci.p1}</p>
+            <p className="text-sm leading-loose text-white-lp/65 font-sans">{t.sci.p2}</p>
+          </div>
+        </div>
+      </section>
+
       {/* FOOTER */}
       <footer className="relative py-16 md:py-20 px-6 text-center bg-[#111a2e] border-t border-gold/10">
         <div className="mb-6 flex justify-center w-40 md:w-52 mx-auto">
@@ -1207,13 +1364,11 @@ export default function Home() {
 
       {/* CONJUNTO FLOTANTE: TOOLTIP + BOTÓN CALCULADORA */}
       <div className="fixed bottom-[84px] md:bottom-[100px] right-4 md:right-6 z-30 flex flex-col items-end pointer-events-none">
-        {/* Tooltip */}
         <div className={`mb-3 mr-1 bg-gradient-to-r from-gold to-gold-light text-navy text-[10px] sm:text-xs font-black uppercase tracking-wider px-3.5 py-2 rounded-lg shadow-[0_5px_15px_rgba(203,161,92,0.4)] relative transition-all duration-500 transform origin-bottom-right ${showCalcTooltip ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
           {t.calc.tooltip}
           <div className="absolute -bottom-1 right-4 w-3 h-3 bg-gold-light rotate-45"></div>
         </div>
         
-        {/* Botón */}
         <button onClick={() => setIsCalcOpen(true)} title="Calculadora de Dosis" className="pointer-events-auto bg-[#1e2a44] border border-gold hover:bg-gold w-11 h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-[0_6px_20px_rgba(203,161,92,0.2)] transition-all duration-300 hover:scale-110 group animate-fade-up [animation-delay:1700ms]">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6 text-gold group-hover:text-navy transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
