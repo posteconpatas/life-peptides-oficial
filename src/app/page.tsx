@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 type Lang = "es" | "pt" | "en";
-type CatKey = "all" | "peptidos" | "cosmeticos" | "mezclas" | "biorreguladores" | "suministros";
 
 type Producto = {
   id: string;
@@ -13,16 +12,27 @@ type Producto = {
   precio: number;
   imagen: string;
   categoria: string;
+  clics: number;
+  pedidos: number;
   descripcion: Record<Lang, string>;
   detalles: Record<Lang, string>;
 };
 
 type CartItem = Producto & { cantidad: number };
 
+type Cupon = {
+  id: string;
+  codigo: string;
+  tipo: "porcentaje" | "fijo";
+  descuento: number;
+  activo: boolean;
+  usos: number;
+};
+
 const numeroWhatsApp = "59178272722";
 
-// Clasificador exacto y flexible según la tabla científica proporcionada
-const detectarCategoria = (nombre: string): string => {
+const detectarCategoria = (nombre: string, catManual?: string): string => {
+  if (catManual && catManual.trim() !== "") return catManual.trim();
   const n = nombre.toUpperCase();
   
   if (n.includes("5-AMINO") || n.includes("5 AMINO")) return "Metabolismo y grasa corporal";
@@ -132,7 +142,13 @@ const dict = {
       empty: "El carrito está vacío.",
       qty: "x",
       del: "Eliminar",
+      subtotal: "Subtotal",
+      discount: "Descuento",
       total: "Total",
+      couponPlaceholder: "Código de cupón...",
+      couponApply: "Aplicar",
+      couponApplied: "Cupón aplicado",
+      couponInvalid: "Cupón inválido o inactivo",
       bonusInc: "Incluye Agua BAC de regalo",
       formTitle: "Datos del Solicitante",
       name: "Nombre completo",
@@ -249,7 +265,13 @@ const dict = {
       empty: "O carrinho está vazio.",
       qty: "x",
       del: "Remover",
+      subtotal: "Subtotal",
+      discount: "Desconto",
       total: "Total",
+      couponPlaceholder: "Código de cupom...",
+      couponApply: "Aplicar",
+      couponApplied: "Cupom aplicado",
+      couponInvalid: "Cupom inválido ou inativo",
       bonusInc: "Inclui Água BAC grátis",
       formTitle: "Dados do Cliente",
       name: "Nome completo",
@@ -366,7 +388,13 @@ const dict = {
       empty: "Your cart is empty.",
       qty: "x",
       del: "Remove",
+      subtotal: "Subtotal",
+      discount: "Discount",
       total: "Total",
+      couponPlaceholder: "Coupon code...",
+      couponApply: "Apply",
+      couponApplied: "Coupon applied",
+      couponInvalid: "Invalid or inactive coupon",
       bonusInc: "Includes Free BAC Water",
       formTitle: "Customer Data",
       name: "Full Name",
@@ -443,6 +471,12 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"az" | "price-asc" | "price-desc">("az");
 
+  // Estados para Cupones de Descuento
+  const [cuponInput, setCuponInput] = useState("");
+  const [cuponAplicado, setCuponAplicado] = useState<Cupon | null>(null);
+  const [cuponMsg, setCuponMsg] = useState<{ text: string; type: "ok" | "err" } | null>(null);
+  const [validandoCupon, setValidandoCupon] = useState(false);
+
   const [selectedProd, setSelectedProd] = useState<Producto | null>(null);
   const [modalQty, setModalQty] = useState<number>(1);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -505,7 +539,9 @@ export default function Home() {
             dosis: p.dosis || "",
             precio: p.precio,
             imagen: p.imagen || "",
-            categoria: detectarCategoria(p.nombre),
+            categoria: detectarCategoria(p.nombre, p.categoria),
+            clics: Number(p.clics || 0),
+            pedidos: Number(p.pedidos || 0),
             descripcion: {
               es: p.descripcion_es || "",
               pt: p.descripcion_pt || "",
@@ -556,11 +592,63 @@ export default function Home() {
   };
 
   const removeFromCart = (id: string) => setCart((prev) => prev.filter((item) => item.id !== id));
-  const getTotal = () => cart.reduce((total, item) => total + item.precio * item.cantidad, 0);
+  const getSubtotal = () => cart.reduce((total, item) => total + item.precio * item.cantidad, 0);
 
-  const handleSendOrder = (e: React.FormEvent) => {
+  const getDiscountAmount = () => {
+    const sub = getSubtotal();
+    if (!cuponAplicado || sub <= 0) return 0;
+    if (cuponAplicado.tipo === "porcentaje") {
+      return Math.min(sub, sub * (cuponAplicado.descuento / 100));
+    }
+    return Math.min(sub, cuponAplicado.descuento);
+  };
+
+  const getTotal = () => Math.max(0, getSubtotal() - getDiscountAmount());
+
+  const handleApplyCoupon = async () => {
+    const code = cuponInput.trim().toUpperCase();
+    if (!code) return;
+    setValidandoCupon(true);
+    setCuponMsg(null);
+
+    try {
+      const { data, error } = await supabase
+        .from("cupones")
+        .select("*")
+        .ilike("codigo", code)
+        .eq("activo", true)
+        .maybeSingle();
+
+      if (error || !data) {
+        setCuponAplicado(null);
+        setCuponMsg({ text: t.cart.couponInvalid, type: "err" });
+      } else {
+        setCuponAplicado({
+          id: data.id,
+          codigo: data.codigo.toUpperCase(),
+          tipo: data.tipo === "fijo" ? "fijo" : "porcentaje",
+          descuento: Number(data.descuento),
+          activo: data.activo,
+          usos: Number(data.usos || 0)
+        });
+        const labelDesc = data.tipo === "fijo" ? `-$${Number(data.descuento).toFixed(2)} USD` : `-${data.descuento}%`;
+        setCuponMsg({ text: `${t.cart.couponApplied}: ${data.codigo.toUpperCase()} (${labelDesc})`, type: "ok" });
+      }
+    } catch {
+      setCuponMsg({ text: t.cart.couponInvalid, type: "err" });
+    } finally {
+      setValidandoCupon(false);
+    }
+  };
+
+  const handleSendOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) return alert(t.cart.empty);
+    
+    const subtotal = getSubtotal();
+    const descuentoMonto = getDiscountAmount();
+    const totalFinal = getTotal();
+
     let mensaje = `${lang === 'es' ? 'Hola, me gustaría realizar el siguiente pedido de investigación:' : lang === 'pt' ? 'Olá, gostaria de fazer o seguinte pedido de pesquisa:' : 'Hello, I would like to place the following research order:'}\n\n👤 *${t.cart.formTitle}:*\n- ${t.cart.name}: ${formData.nombre}\n- ${t.cart.age}: ${formData.edad}\n- ${t.cart.email}: ${formData.correo}\n- ${t.cart.phone}: ${formData.telefono}\n\n🛒 *Pedido:*\n`;
     
     cart.forEach((item) => { 
@@ -568,7 +656,30 @@ export default function Home() {
       mensaje += `- ${item.cantidad}x ${item.nombre} ${item.dosis && item.dosis.trim() !== "" ? `(${item.dosis})` : ""}${bonoInfo} - $${(item.precio * item.cantidad).toFixed(2)}\n`; 
     });
     
-    mensaje += `\n💰 *${t.cart.total}:* $${getTotal().toFixed(2)} USD`;
+    if (cuponAplicado) {
+      const descLabel = cuponAplicado.tipo === "porcentaje" ? `${cuponAplicado.descuento}% OFF` : `$${cuponAplicado.descuento.toFixed(2)} USD OFF`;
+      mensaje += `\n💵 *${t.cart.subtotal}:* $${subtotal.toFixed(2)} USD`;
+      mensaje += `\n🎟️ *Cupón canjeado:* ${cuponAplicado.codigo} (${descLabel} → -$${descuentoMonto.toFixed(2)} USD)`;
+      mensaje += `\n💰 *${t.cart.total}:* $${totalFinal.toFixed(2)} USD`;
+    } else {
+      mensaje += `\n💰 *${t.cart.total}:* $${totalFinal.toFixed(2)} USD`;
+    }
+
+    // Registrar métricas de pedido (+cantidad) y uso de cupón (+1) en segundo plano
+    cart.forEach((item) => {
+      const nuevosPedidos = (item.pedidos || 0) + item.cantidad;
+      setProductos((prev) => prev.map((p) => (p.id === item.id ? { ...p, pedidos: nuevosPedidos } : p)));
+      supabase.from("productos").update({ pedidos: nuevosPedidos }).eq("id", item.id).then(() => {});
+    });
+
+    if (cuponAplicado) {
+      supabase
+        .from("cupones")
+        .update({ usos: (cuponAplicado.usos || 0) + 1 })
+        .eq("id", cuponAplicado.id)
+        .then(() => {});
+    }
+
     window.open(`https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`, "_blank");
     setIsCartOpen(false);
   };
@@ -587,7 +698,7 @@ export default function Home() {
   const generateCalcMessage = () => {
     if (!isComplete || isExceeding) return "";
     
-    const siteUrl = typeof window !== 'undefined' ? window.location.origin : "https://lifepeptidesbolivia.com";
+    const siteUrl = typeof window !== 'undefined' ? window.location.origin : "https://lifepeptidesbo.com";
 
     let text = `━━━━━━━━━━━━━━━━━━━━━\n  💉 *${t.calc.msgTitle}*\n━━━━━━━━━━━━━━━━━━━━━\n\n`;
     text += `🧪 *${t.calc.msgF}:* ${frascoMg}mg\n`;
@@ -635,9 +746,14 @@ export default function Home() {
       return a.nombre.localeCompare(b.nombre);
     });
 
+  // Al hacer clic en un producto, abre el modal e incrementa +1 en la métrica de clics en Supabase
   const abrirProductoModal = (prod: Producto) => {
-    setSelectedProd(prod);
+    const nuevosClics = (prod.clics || 0) + 1;
+    const prodActualizado = { ...prod, clics: nuevosClics };
+    setSelectedProd(prodActualizado);
     setModalQty(1);
+    setProductos((prev) => prev.map((p) => (p.id === prod.id ? prodActualizado : p)));
+    supabase.from("productos").update({ clics: nuevosClics }).eq("id", prod.id).then(() => {});
   };
 
   const categoriasUnicas = Array.from(new Set(productos.map(p => p.categoria))).sort((a, b) => {
@@ -1100,7 +1216,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* MODAL CARRITO */}
+      {/* MODAL CARRITO CON CASILLA DE CUPÓN DE DESCUENTO */}
       {isCartOpen && (
         <div className="fixed inset-0 z-50 flex justify-center items-center bg-navy/90 backdrop-blur-sm p-4 animate-fade-up">
           <div className="bg-navy-2/95 backdrop-blur-xl border border-gold/20 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-[0_20px_60px_rgba(0,0,0,0.5)] flex flex-col">
@@ -1113,7 +1229,7 @@ export default function Home() {
               {cart.length === 0 ? (
                 <p className="text-center text-white-lp/50 py-14 text-sm font-sans">{t.cart.empty}</p>
               ) : (
-                <div className="space-y-3 mb-8">
+                <div className="space-y-3 mb-6">
                   {cart.map((item, index) => (
                     <div key={index} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-navy/60 p-4 border border-gold/10 gap-3 sm:gap-0">
                       <div>
@@ -1134,8 +1250,63 @@ export default function Home() {
                       </div>
                     </div>
                   ))}
-                  <div className="text-right text-gold-light text-lg tracking-widest pt-4 border-t border-gold/15 font-display">
-                    {t.cart.total}: ${getTotal().toFixed(2)} USD
+
+                  {/* CASILLA DE CUPÓN DE DESCUENTO */}
+                  <div className="pt-4 border-t border-gold/15">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={cuponInput}
+                        onChange={(e) => setCuponInput(e.target.value.toUpperCase())}
+                        placeholder={t.cart.couponPlaceholder}
+                        className="flex-1 bg-navy/70 border border-gold/25 px-4 py-2.5 text-xs sm:text-sm text-gold-light uppercase tracking-[2px] placeholder:text-white-lp/35 placeholder:normal-case placeholder:tracking-normal focus:outline-none focus:border-gold transition-colors font-sans"
+                      />
+                      {cuponAplicado ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCuponAplicado(null);
+                            setCuponInput("");
+                            setCuponMsg(null);
+                          }}
+                          className="px-4 py-2.5 border border-red-400/40 text-red-300 hover:bg-red-500/10 text-xs uppercase tracking-[2px] font-semibold transition-colors font-sans"
+                        >
+                          ✕
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={validandoCupon || !cuponInput.trim()}
+                          className="px-5 py-2.5 border border-gold/60 text-gold-light hover:bg-gold hover:text-navy disabled:opacity-40 text-xs uppercase tracking-[2px] font-semibold transition-all duration-300 font-sans"
+                        >
+                          {validandoCupon ? "..." : t.cart.couponApply}
+                        </button>
+                      )}
+                    </div>
+
+                    {cuponMsg && (
+                      <p className={`text-xs mt-2 font-sans ${cuponMsg.type === "ok" ? "text-gold" : "text-red-400"}`}>
+                        {cuponMsg.type === "ok" ? "🎟️ " : "⚠️ "}{cuponMsg.text}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* RESUMEN DE TOTALES CON DESCUENTO */}
+                  <div className="pt-4 border-t border-gold/15 space-y-1.5 text-right">
+                    {cuponAplicado && (
+                      <>
+                        <div className="text-white-lp/60 text-xs sm:text-sm font-sans">
+                          {t.cart.subtotal}: ${getSubtotal().toFixed(2)} USD
+                        </div>
+                        <div className="text-gold text-xs sm:text-sm font-semibold font-sans">
+                          {t.cart.discount} ({cuponAplicado.codigo} · {cuponAplicado.tipo === "porcentaje" ? `${cuponAplicado.descuento}%` : `$${cuponAplicado.descuento}`}): -${getDiscountAmount().toFixed(2)} USD
+                        </div>
+                      </>
+                    )}
+                    <div className="text-gold-light text-lg sm:text-xl tracking-widest font-display">
+                      {t.cart.total}: ${getTotal().toFixed(2)} USD
+                    </div>
                   </div>
                 </div>
               )}
